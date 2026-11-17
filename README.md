@@ -33,6 +33,11 @@ Online rooms are the same as PC MMIM v1.0.0.0, so Switch, phone, browser and PC 
 Waluigi and MiiBumm can be picked online too: players on this port see them, and PC MMIM players see them as Luigi
 and Mario.
 
+<p align="center">
+<img src="docs/waluigi_miibumm.jpg" alt="MiiBumm and Waluigi in Super Leaf suits, playing in split screen on the Switch" width="70%"><br>
+<sub>MiiBumm (P1) and Waluigi (P2) in Local Play.</sub>
+</p>
+
 Downloads are on the [Releases](../../releases) page.
 
 ## Nintendo Switch
