@@ -1,0 +1,27 @@
+--- a/mesa-imported/codegen/nv50_ir_emit_gm107.cpp	2026-10-31 02:27:42
++++ b/mesa-imported/codegen/nv50_ir_emit_gm107.cpp	2026-10-31 02:27:42
+@@ -25,6 +25,8 @@
+ #include "codegen/nv50_ir_target_gm107.h"
+ 
+ //#define GM107_DEBUG_SCHED_DATA
++
++extern "C" int uam_conservative_sched; // RL Sideswipe NX patch 4
+ 
+ namespace nv50_ir {
+ 
+@@ -3386,7 +3388,14 @@
+          n++;
+       }
+ 
+-      emitField(data, n * 21, 21, insn->sched);
++      // RL Sideswipe NX patch 4: conservative scheduling for shaders that
++      // render wrong on the console only (the emulator ignores these bits):
++      // keep yield and barrier ids, stall 15 cycles, wait on all six
++      // barriers, no operand reuse.
++      uint32_t sched = insn->sched;
++      if (uam_conservative_sched)
++         sched = (sched & 0x7f0) | 0xf | (0x3f << 11);
++      emitField(data, n * 21, 21, sched);
+    }
+ 
+    switch (insn->op) {

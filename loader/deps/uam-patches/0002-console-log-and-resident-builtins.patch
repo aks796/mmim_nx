@@ -1,0 +1,133 @@
+diff -ru a/source/compiler_iface.cpp b/source/compiler_iface.cpp
+--- a/source/compiler_iface.cpp	2026-10-30 16:18:43
++++ b/source/compiler_iface.cpp	2026-10-30 16:18:43
+@@ -301,14 +301,14 @@
+ 	int ret = nv50_ir_generate_code(&m_info);
+ 	if (ret < 0)
+ 	{
+-		fprintf(stderr, "Error compiling program: %d\n", ret);
++		uam_log_printf("Error compiling program: %d\n", ret);
+ 		return false;
+ 	}
+ 
+ 	if (m_info.io.fp64_rcprsq)
+-		fprintf(stderr, "warning: program uses 64-bit floating point reciprocal/square root, for which only a rough approximation with 20 bits of mantissa is supported by hardware\n");
++		uam_log_printf("warning: program uses 64-bit floating point reciprocal/square root, for which only a rough approximation with 20 bits of mantissa is supported by hardware\n");
+ 	if (m_info.io.int_divmod)
+-		fprintf(stderr, "warning: program uses non-constant integer division/modulo, which is unsupported by hardware; floating point emulation with resulting loss of precision has been applied\n");
++		uam_log_printf("warning: program uses non-constant integer division/modulo, which is unsupported by hardware; floating point emulation with resulting loss of precision has been applied\n");
+ 
+ 	m_data = glsl_program_get_constant_buffer(m_glsl, m_dataSize);
+ 	RetrieveAndPadCode();
+diff -ru a/source/glsl_frontend.cpp b/source/glsl_frontend.cpp
+--- a/source/glsl_frontend.cpp	2026-10-30 16:18:43
++++ b/source/glsl_frontend.cpp	2026-10-30 16:18:43
+@@ -329,13 +329,22 @@
+ 
+ static struct gl_context gl_ctx;
+ 
++static bool gl_ctx_ready;
++
++// RL Sideswipe NX: the console compiles thousands of shaders in one process. Build the context and
++// Mesa's GLSL built-in function library once and keep them; releasing them after every shader (as
++// the command-line tool does) made each compile regenerate the whole built-in library.
+ void glsl_frontend_init()
+ {
++	if (gl_ctx_ready)
++		return;
+ 	initialize_context(&gl_ctx, API_OPENGL_CORE);
++	gl_ctx_ready = true;
+ }
+ 
+ void glsl_frontend_exit()
+ {
++	return;
+ 	_mesa_glsl_release_types();
+ 	_mesa_glsl_release_builtin_functions();
+ }
+@@ -403,9 +412,9 @@
+ 	_mesa_glsl_compile_shader(&gl_ctx, shader, false, false, true);
+ 	if (shader->CompileStatus != COMPILE_SUCCESS)
+ 	{
+-		fprintf(stderr, "Shader failed to compile.\n");
++		uam_log_printf("Shader failed to compile.\n");
+ 		if (shader->InfoLog && shader->InfoLog[0])
+-			fprintf(stderr, "%s\n", shader->InfoLog);
++			uam_log_printf("%s\n", shader->InfoLog);
+ 		goto _fail;
+ 	}
+ 	_mesa_clear_shader_program_data(&gl_ctx, prg);
+@@ -414,9 +423,9 @@
+ 	link_shaders(&gl_ctx, prg);
+ 	if (prg->data->LinkStatus != LINKING_SUCCESS)
+ 	{
+-		fprintf(stderr, "Shader failed to link.\n");
++		uam_log_printf("Shader failed to link.\n");
+ 		if (prg->data->InfoLog && prg->data->InfoLog[0])
+-			fprintf(stderr, "%s\n", prg->data->InfoLog);
++			uam_log_printf("%s\n", prg->data->InfoLog);
+ 		goto _fail;
+ 	}
+ 	else
+@@ -437,18 +446,18 @@
+ 		// Do the TGSI conversion
+ 		if (!st_link_shader(&gl_ctx, prg))
+ 		{
+-			fprintf(stderr, "st_link_shader failed\n");
++			uam_log_printf("st_link_shader failed\n");
+ 			goto _fail;
+ 		}
+ 
+ 		// Force OriginUpperLeft
+ 		if (linked_shader->Program->OriginUpperLeft)
+-			fprintf(stderr, "warning: origin_upper_left has no effect\n");
++			uam_log_printf("warning: origin_upper_left has no effect\n");
+ 		linked_shader->Program->OriginUpperLeft = GL_TRUE;
+ 
+ 		// Check for PixelCenterInteger (unsupported)
+ 		if (linked_shader->Program->PixelCenterInteger == GL_TRUE) {
+-			fprintf(stderr, "error: pixel_center_integer is not supported\n");
++			uam_log_printf("error: pixel_center_integer is not supported\n");
+ 			goto _fail;
+ 		}
+ 
+@@ -476,13 +485,13 @@
+ 				rc = tgsi_translate_compute(&gl_ctx, linked_shader->Program);
+ 				break;
+ 			default:
+-				fprintf(stderr, "Unsupported stage\n");
++				uam_log_printf("Unsupported stage\n");
+ 				goto _fail;
+ 		}
+ 
+ 		if (!rc)
+ 		{
+-			fprintf(stderr, "Translation failed\n");
++			uam_log_printf("Translation failed\n");
+ 			goto _fail;
+ 		}
+ 
+@@ -501,7 +510,7 @@
+ 			if (location != last_location)
+ 			{
+ 				last_location = location;
+-				fprintf(stderr, "error: uniform '%s' in driver constbuf (c[0x1][0x%03x]) not supported\n",
++				uam_log_printf("error: uniform '%s' in driver constbuf (c[0x1][0x%03x]) not supported\n",
+ 					p->Name,
+ 					// "(type=%d dim=%ux%u size=%u)"
+ 					//storage->type->base_type,
+diff -ru a/source/glsl_frontend.h b/source/glsl_frontend.h
+--- a/source/glsl_frontend.h	2026-10-30 16:18:42
++++ b/source/glsl_frontend.h	2026-10-30 16:18:43
+@@ -16,6 +16,11 @@
+ 	pipeline_stage_compute,
+ };
+ 
++#ifdef __cplusplus
++extern "C"
++#endif
++void uam_log_printf(const char* fmt, ...) __attribute__((format(printf, 1, 2)));
++
+ void glsl_frontend_init();
+ void glsl_frontend_exit();
+ 

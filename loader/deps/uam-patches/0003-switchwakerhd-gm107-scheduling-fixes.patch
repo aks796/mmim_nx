@@ -1,0 +1,43 @@
+--- a/mesa-imported/codegen/nv50_ir.cpp	2020-12-16 05:37:13
++++ b/mesa-imported/codegen/nv50_ir.cpp	2026-10-30 17:59:26
+@@ -590,6 +590,12 @@
+    predSrc = -1;
+    flagsDef = -1;
+    flagsSrc = -1;
++
++   // SwitchWakerHD patch 6: SchedDataCalculatorGM107::setDelay reads the wait mask of the next block's
++   // first instruction before that block's visit sets it; uninitialised, the output depended on what
++   // the heap held (stale data from an earlier compile in the same process). 0x7e0 is the value the
++   // scheduler starts every instruction with (no barriers, nothing to wait on).
++   sched = 0x7e0;
+ }
+ 
+ Instruction::Instruction()
+--- a/mesa-imported/codegen/nv50_ir_emit_gm107.cpp	2020-12-16 05:37:13
++++ b/mesa-imported/codegen/nv50_ir_emit_gm107.cpp	2026-10-30 17:59:26
+@@ -4119,7 +4119,11 @@
+    if (delay <= GM107_MIN_ISSUE_DELAY && (wr & rd) != 7) {
+       // Barriers take one additional clock cycle to become active on top of
+       // the clock consumed by the instruction producing it.
+-      if (!next) {
++      // wwhd patch 8 (from SwitchWaker): Mesa 20.1's rule restored. uam asked the next block's entry for its waits,
++      // but those are only set when that block is visited, so a barrier set by a block's last instruction got
++      // stall 1 and the next block's first instruction passed the not-yet-active barrier (SwitchWaker's light
++      // volumes: the fragment epilogue's MOV R0 overwrote IPA.SAT's R0 = 1/w before the IPA read it). PATCHES.md.
++      if (!next || insn->bb != next->bb) {
+          delay = 0x2;
+       } else {
+          int wt = getWtDepBar(next);
+@@ -4128,7 +4132,11 @@
+       }
+    }
+ 
+-   if (lastDualIssued || !next || delay > 1 || !targ->canDualIssue(insn, next)) {
++   // wwhd patch 7: no dual issue. On the console a dual-issued pair in the lit (sunlight) terms of the game's
++   // shaders made whole 32-thread fragment warps (4x8-pixel screen blocks) flicker with wrong lighting;
++   // gfx/gl's Mesa 20.1 never dual-issues. See runtime/third_party/uam/PATCHES.md.
++   static const bool kDualIssue = false;
++   if (!kDualIssue || lastDualIssued || !next || delay > 1 || !targ->canDualIssue(insn, next)) {
+       delay = CLAMP(delay, GM107_MIN_ISSUE_DELAY, GM107_MAX_ISSUE_DELAY);
+       lastDualIssued = false;
+    } else {

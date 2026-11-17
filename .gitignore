@@ -1,0 +1,4 @@
+.DS_Store
+# release packages go on the Releases page, not in the repository
+*.zip
+*.apk

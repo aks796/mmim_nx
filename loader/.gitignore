@@ -1,0 +1,14 @@
+build/
+build_dk/
+*.elf
+*.nacp
+*.nro
+*.map
+out/
+local_apk/
+debug_boot*.txt
+build_*/
+deps/out
+deps/src/
+deps/build-*/
+deps/build-venv/
