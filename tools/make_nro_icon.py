@@ -10,6 +10,10 @@ Presets:
       2 icon px per sprite px; render() below)
 
 usage: tools/venv/bin/python tools/make_nro_icon.py <logo.png|webp> <out.jpg> [preview.png] [--preset name]
+       [--size WxH]   another size from the same art, e.g. 630x500 for the
+                      itch.io cover (nightlight only): the view widens around
+                      the icon's centre, sprite pixels stay whole (x2 from 512
+                      wide), the logo is 80% of the width; out .png = PNG
 """
 import sys
 from PIL import Image
@@ -92,6 +96,14 @@ def main():
     if "--preset" in sys.argv:
         preset = sys.argv[sys.argv.index("--preset") + 1]
         args.remove(preset)
+    size = None
+    if "--size" in sys.argv:
+        v = sys.argv[sys.argv.index("--size") + 1]
+        args.remove(v)
+        size = tuple(int(n) for n in v.lower().split("x"))
+        if preset != "nightlight":
+            sys.exit("--size: nightlight only")
+        return other_size(args[0], args[1], size)
     logo_path, out_path = args[0], args[1]
     preview = args[2] if len(args) > 2 else None
     S = 256
@@ -127,6 +139,37 @@ def main():
     if preview:
         rgb.save(preview)
     print(out_path, rgb.size, preset)
+
+
+def other_size(logo_path, out_path, size):
+    import importlib.util
+    import os
+    spec = importlib.util.spec_from_file_location(
+        "level_bg", os.path.join(os.path.dirname(os.path.abspath(__file__)), "level_bg.py"))
+    level_bg = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(level_bg)
+    scene, cx, cy, side, drop = PRESETS["nightlight"]
+    W, H = size
+    k = 2 if W >= 512 else 1           # whole pixels: 1 sprite px = k px
+    ppu = 256 / side                   # the icon's scale, 1 px per sprite px
+    uw, uh = W / k / ppu, H / k / ppu
+    bg = level_bg.render(scene, cx - uw / 2, cy - uh / 2, cx + uw / 2, cy + uh / 2, ppu)
+    bg = bg.resize((W, H), Image.NEAREST)
+    logo = Image.open(logo_path).convert("RGBA")
+    lw = round(W * 0.8)
+    lh = round(logo.height * lw / logo.width)
+    if lh > H * 0.8:
+        lh = round(H * 0.8)
+        lw = round(logo.width * lh / logo.height)
+    logo = logo.resize((lw, lh), Image.LANCZOS)
+    img = bg.copy()
+    img.alpha_composite(logo, ((W - lw) // 2, (H - lh) // 2 + drop * k))
+    rgb = img.convert("RGB")
+    if out_path.lower().endswith(".png"):
+        rgb.save(out_path, optimize=True)
+    else:
+        rgb.save(out_path, "JPEG", quality=95, subsampling=0)
+    print(out_path, rgb.size, "nightlight")
 
 
 if __name__ == "__main__":

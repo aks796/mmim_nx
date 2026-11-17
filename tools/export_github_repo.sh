@@ -12,7 +12,7 @@
 #            and assets are MiiBumm's and never go in.
 #   tools/   the release helpers (scrub, sign, icon, this script)
 #   + tools/github/: README.md, THIRD_PARTY_NOTICES.md, LICENSE (GPL-3.0),
-#     LICENSE-MIT, gitignore (as .gitignore)
+#     LICENSE-MIT, gitignore (as .gitignore), docs/ (the README's screenshots)
 # Ends with a scan: no home path, user name or e-mail address anywhere.
 #
 # usage: tools/export_github_repo.sh
@@ -46,6 +46,7 @@ done
 G="$ROOT/tools/github"
 cp -p "$G/README.md" "$G/THIRD_PARTY_NOTICES.md" "$G/LICENSE" "$G/LICENSE-MIT" "$OUT/"
 cp -p "$G/gitignore" "$OUT/.gitignore"
+rsync -a --exclude='.DS_Store' "$G/docs" "$OUT/"
 
 # nothing personal: the home path, the account name, the e-mail address
 user=$(basename "$HOME")

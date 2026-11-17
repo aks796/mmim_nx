@@ -11,6 +11,11 @@
 [![Web](https://img.shields.io/badge/Web-Browser-E34F26?style=for-the-badge&logo=html5&logoColor=white)](#web)
 [![Version](https://img.shields.io/badge/Version-1.0.0-4C8BF5?style=for-the-badge)](../../releases/latest)
 
+<img src="docs/split_screen.jpg" alt="Four players in split screen on the Nintendo Switch" width="49%">
+<img src="docs/touch_controls.jpg" alt="Fire Mario jumping with the touch controls on a phone" width="49%">
+
+<sub>Left: 4-player split screen on the Switch. Right: touch controls on Android and phone browsers.</sub>
+
 </div>
 
 ---
