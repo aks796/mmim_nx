@@ -104,6 +104,10 @@ This repository holds the port's own code. MMIM's game code and assets are MiiBu
 comes with the Unity editor (`Editor/Data/il2cpp/` on Windows, `Unity.app/Contents/il2cpp/` on macOS) and is not
 copied here.
 
+`PortSkins.cs` (Waluigi and MiiBumm online) also needs a hook in Photon PUN's `PhotonNetwork.cs`: a
+`public static System.Func<string, Player, string> PortPrefabHook;` that `NetworkInstantiate` calls on the prefab
+name, with the creator, right before `prefabPool.Instantiate`.
+
 The port also changes some of MMIM's own scripts, for input, menus, rumble, and music in the browser. Those changes are
 part of MiiBumm's code and are not published here.
 
