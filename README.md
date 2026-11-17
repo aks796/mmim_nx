@@ -1,4 +1,21 @@
-# MMIM for Switch, Android and the web
+<div align="center">
+
+<img src="loader/mmim_nx.jpg" alt="MiiBumm's Mega Item Mod" width="160">
+
+# mmim_nx
+
+**MiiBumm's Mega Item Mod on Nintendo Switch, Android and the web**
+
+[![Switch](https://img.shields.io/badge/Nintendo_Switch-Homebrew-E60012?style=for-the-badge&logo=nintendoswitch&logoColor=white)](#nintendo-switch)
+[![Android](https://img.shields.io/badge/Android-APK-3DDC84?style=for-the-badge&logo=android&logoColor=white)](#android)
+[![Web](https://img.shields.io/badge/Web-Browser-E34F26?style=for-the-badge&logo=html5&logoColor=white)](#web)
+[![Version](https://img.shields.io/badge/Version-1.0.0-4C8BF5?style=for-the-badge)](../../releases/latest)
+
+</div>
+
+---
+
+## About
 
 An unofficial port of [MiiBumm's Mega Item Mod](https://github.com/MiiBumm/MiiBumms-Mega-Item-Mod) (MMIM), the item mod
 of ipodtouch0218's [NSMB Mario vs. Luigi](https://github.com/ipodtouch0218/NSMB-MarioVsLuigi), to three new places:
