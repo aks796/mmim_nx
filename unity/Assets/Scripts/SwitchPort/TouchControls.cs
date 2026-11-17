@@ -98,16 +98,33 @@ public class TouchControls : MonoBehaviour
         }
     }
 
-    // a phone's browser: touch from the start; any other touch screen (an
-    // iPad says it is a Mac) once it is touched; a key pressed: the keyboard
+    // a phone's browser: touch from the start (once: v1.0.1 set it again
+    // every frame, so a key or a controller never hid them there); any other
+    // touch screen (an iPad says it is a Mac) once it is touched; then as on
+    // the phone: a controller's button or stick, or a key, hides them, a
+    // touch shows them again
+    static bool s_mobileWebShown;
+
     static void WatchWebTouch()
     {
         var touch = UnityEngine.InputSystem.Touchscreen.current;
-        if (touch != null && (Application.isMobilePlatform || touch.primaryTouch.press.wasPressedThisFrame))
+        if (touch != null && Application.isMobilePlatform && !s_mobileWebShown)
+        {
+            s_mobileWebShown = true;
             WebTouch = true;
-        var keys = UnityEngine.InputSystem.Keyboard.current;
-        if (keys != null && keys.anyKey.wasPressedThisFrame)
+        }
+        if (touch != null && touch.primaryTouch.press.wasPressedThisFrame)
+        {
+            if (!WebTouch)
+                Debug.LogWarning("[touch] controls shown: the screen was touched");
+            WebTouch = true;
+            return;
+        }
+        if (WebTouch && ControllerUsed(out string what))
+        {
             WebTouch = false;
+            Debug.LogWarning("[touch] controls hidden: " + what);
+        }
     }
 
     // the phone: a touch shows them; a controller's button or stick pushed,

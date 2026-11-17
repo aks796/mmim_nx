@@ -76,7 +76,7 @@ It needs a 64-bit phone (arm64) with Android 5.1 or newer.
 
 ## Web
 
-Open the game's itch.io page, or host the files of `MMIM_Web_v1.0.1.zip` (from the v1.0.1 release) on any web server. It plays in a current
+Open the game's itch.io page, or host the files of `MMIM_Web_v1.0.2.zip` on any web server. It plays in a current
 desktop or phone browser. On an Android phone, the first touch switches the game to full screen and landscape.
 
 Keep the game's tab in front during an online match: browsers pause background tabs, and the game drops from the room
@@ -92,9 +92,8 @@ after about 10 seconds.
 | The reserve box (bottom right) | Tap it to use the item in reserve. |
 | Pause (top centre) | Pause menu. |
 
-With a controller (or a keyboard) the on-screen controls hide by themselves and come back on the next touch: on
-Android as soon as a controller button or stick is used, in a browser when a key is pressed. In a browser, a keyboard
-or a controller works as on PC.
+With a controller (or a keyboard) the on-screen controls hide by themselves as soon as a button, stick or key is
+used, and come back on the next touch. In a browser, a keyboard or a controller works as on PC.
 
 ## What is in this repository
 
