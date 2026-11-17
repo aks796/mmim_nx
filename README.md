@@ -9,7 +9,7 @@
 [![Switch](https://img.shields.io/badge/Nintendo_Switch-Homebrew-E60012?style=for-the-badge&logo=nintendoswitch&logoColor=white)](#nintendo-switch)
 [![Android](https://img.shields.io/badge/Android-APK-3DDC84?style=for-the-badge&logo=android&logoColor=white)](#android)
 [![Web](https://img.shields.io/badge/Web-Browser-E34F26?style=for-the-badge&logo=html5&logoColor=white)](#web)
-[![Version](https://img.shields.io/badge/Version-1.0.1-4C8BF5?style=for-the-badge)](../../releases/latest)
+[![Version](https://img.shields.io/badge/Version-1.0.2-4C8BF5?style=for-the-badge)](../../releases/latest)
 
 <img src="docs/split_screen.jpg" alt="Four players in split screen on the Nintendo Switch" width="49%">
 <img src="docs/touch_controls.jpg" alt="Fire Mario jumping with the touch controls on a phone" width="49%">
@@ -39,7 +39,7 @@ Downloads are on the [Releases](../../releases) page.
 
 Needs a Switch running [Atmosphère](https://github.com/Atmosphere-NX/Atmosphere).
 
-1. Extract `MMIM_Switch_v1.0.1.zip` to the root of the SD card. This gives `/switch/mmim_nx/mmim_nx.nro` and
+1. Extract `MMIM_Switch_v1.0.2.zip` to the root of the SD card. This gives `/switch/mmim_nx/mmim_nx.nro` and
    `/switch/mmim_nx/mmim.apk`.
 2. Start the Homebrew Menu by **holding R while launching any installed game**. The port needs the console's full
    memory; from the album applet it stops with "Not enough memory".
@@ -52,6 +52,7 @@ On the Switch:
 - **Local Play** on the main menu: 1 to 4 players on one console, split screen for 2 or more, each with a P1-P4 tag in
   their colour (red, green, yellow, blue). Each player picks a character with their own controller; Waluigi and
   MiiBumm are on the list too. Alone in handheld mode with the Joy-Con attached, Local Play starts straight away.
+  Pausing a Local Play match stops the whole game until you resume.
 - **In a room:** **+** starts the game (online when you are the host). In the Local Play room, **-** or **ZL+ZR**
   (or holding **L+R**) brings up the controller screen to add or remove players.
 - **Online:** lobbies and private rooms, the same as on PC.
@@ -65,12 +66,12 @@ Settings live in `/switch/mmim_nx/config.txt` after the first start.
 
 ## Android
 
-Install `MMIM_Android_v1.0.1.apk` (it updates v1.0.0 in place). Your phone may ask you to allow installs from your browser or file manager first.
+Install `MMIM_Android_v1.0.2.apk` (it updates older versions in place). Your phone may ask you to allow installs from your browser or file manager first.
 It needs a 64-bit phone (arm64) with Android 5.1 or newer.
 
 ## Web
 
-Open the game's itch.io page, or host the files of `MMIM_Web_v1.0.1.zip` on any web server. It plays in a current
+Open the game's itch.io page, or host the files of `MMIM_Web_v1.0.1.zip` (from the v1.0.1 release) on any web server. It plays in a current
 desktop or phone browser. On an Android phone, the first touch switches the game to full screen and landscape.
 
 Keep the game's tab in front during an online match: browsers pause background tabs, and the game drops from the room
@@ -86,8 +87,9 @@ after about 10 seconds.
 | The reserve box (bottom right) | Tap it to use the item in reserve. |
 | Pause (top centre) | Pause menu. |
 
-In a browser, a keyboard or a controller works as on PC: the on-screen controls hide when a key is pressed and come
-back on the next touch.
+With a controller (or a keyboard) the on-screen controls hide by themselves and come back on the next touch: on
+Android as soon as a controller button or stick is used, in a browser when a key is pressed. In a browser, a keyboard
+or a controller works as on PC.
 
 ## What is in this repository
 
@@ -106,7 +108,9 @@ copied here.
 
 `PortSkins.cs` (Waluigi and MiiBumm online) also needs a hook in Photon PUN's `PhotonNetwork.cs`: a
 `public static System.Func<string, Player, string> PortPrefabHook;` that `NetworkInstantiate` calls on the prefab
-name, with the creator, right before `prefabPool.Instantiate`.
+name, with the creator, right before `prefabPool.Instantiate`. `LocalPause.cs` (pausing a Local Play match) needs a
+second one: a `public static System.Func<int, int> PortOfflineClock;` that `ServerTimestamp` passes its offline-mode
+time through.
 
 The port also changes some of MMIM's own scripts, for input, menus, rumble, and music in the browser. Those changes are
 part of MiiBumm's code and are not published here.

@@ -22,10 +22,13 @@ public static class PortPlatform
 #endif
     public static bool Web => Application.platform == RuntimePlatform.WebGLPlayer;
 
-    // on-screen controls in a match: a phone; in a browser, a touch screen in
-    // use (TouchControls.WebTouch: a phone's from the start, an iPad's or a
-    // touch laptop's once it is touched, off again when a key is pressed)
-    public static bool TouchControls => Phone || (Web && global::TouchControls.WebTouch);
+    // on-screen controls in a match: a phone, until a controller or keyboard
+    // is used (TouchControls.PhoneTouch: back on a touch); in a browser, a
+    // touch screen in use (TouchControls.WebTouch: a phone's from the start,
+    // an iPad's or a touch laptop's once it is touched, off again when a key
+    // is pressed)
+    public static bool TouchControls => (Phone && global::TouchControls.PhoneTouch) ||
+                                        (Web && global::TouchControls.WebTouch);
 
     // a browser's console: every log line is a call into JavaScript, and the
     // main menu's character preview alone raised thousands of Photon warnings

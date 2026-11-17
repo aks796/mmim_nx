@@ -17,11 +17,11 @@ GAME		?=	accurate
 ifeq ($(GAME),mmim)
 TARGET		:=	mmim_nx
 APP_TITLE	:=	Mega Item Mod
-APP_VERSION	:=	1.0.1
+APP_VERSION	:=	1.0.2
 else
-TARGET		:=	$(notdir $(CURDIR))
+TARGET		:=	mvl_nx
 APP_TITLE	:=	Mario vs. Luigi
-APP_VERSION	:=	0.1.0
+APP_VERSION	:=	1.0.0
 endif
 APP_AUTHOR	:=	aks796
 BUILD		:=	build

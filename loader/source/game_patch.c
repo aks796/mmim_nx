@@ -22,6 +22,7 @@
 
 #include <stdbool.h>
 #include <stdint.h>
+#include <stdio.h>
 #include <string.h>
 
 #include <switch.h>
@@ -209,6 +210,67 @@ static int u16_starts(const void *str, const char *ascii) {
   return 1;
 }
 
+// --- the About screen: the Switch port's line ---------------------------------------------
+//
+// The user (2026-11-17): put the port in the game's About. HDErick's About is one
+// TMP text: "MOD created by", then "Mod Contributors" with one "Name (role)" line
+// each. The port's line goes after Mark19's Android one, in the same form (at the
+// end if that line is not there). The text sits in the menu scene from the start
+// (its panel inactive), so the title pass below finds it.
+
+static const char k_port_credit[] = "aks796 (Nintendo Switch port)";
+
+// an IL2CPP string (UTF-16) as UTF-8; -1 if it does not fit
+static int u16_to_utf8(const void *str, char *out, int cap) {
+  const int32_t len = *(const int32_t *)((const char *)str + 0x10);
+  const uint16_t *c = (const uint16_t *)((const char *)str + 0x14);
+  int o = 0;
+  for (int i = 0; i < len; i++) {
+    uint32_t cp = c[i];
+    if (cp >= 0xD800 && cp < 0xDC00 && i + 1 < len && c[i + 1] >= 0xDC00 && c[i + 1] < 0xE000)
+      cp = 0x10000 + ((cp - 0xD800) << 10) + (c[++i] - 0xDC00);
+    if (o + 4 >= cap)
+      return -1;
+    if (cp < 0x80) {
+      out[o++] = (char)cp;
+    } else if (cp < 0x800) {
+      out[o++] = (char)(0xC0 | (cp >> 6));
+      out[o++] = (char)(0x80 | (cp & 0x3F));
+    } else if (cp < 0x10000) {
+      out[o++] = (char)(0xE0 | (cp >> 12));
+      out[o++] = (char)(0x80 | ((cp >> 6) & 0x3F));
+      out[o++] = (char)(0x80 | (cp & 0x3F));
+    } else {
+      out[o++] = (char)(0xF0 | (cp >> 18));
+      out[o++] = (char)(0x80 | ((cp >> 12) & 0x3F));
+      out[o++] = (char)(0x80 | ((cp >> 6) & 0x3F));
+      out[o++] = (char)(0x80 | (cp & 0x3F));
+    }
+  }
+  out[o] = 0;
+  return o;
+}
+
+// 1 if this text is the About and got the port's line
+static int about_credit(void *item, void *text, void *set_text) {
+  static char buf[16384], out[16384 + 96];
+  if (!text || u16_to_utf8(text, buf, sizeof buf) < 0 || !strstr(buf, "Mod Contributors") ||
+      strstr(buf, k_port_credit))
+    return 0;
+  const char *after = strstr(buf, "(Android support)");
+  const char *eol = after ? strchr(after, '\n') : NULL;
+  if (eol)
+    snprintf(out, sizeof out, "%.*s\n%s%s", (int)(eol - buf), buf, k_port_credit, eol);
+  else
+    snprintf(out, sizeof out, "%s\n%s", buf, k_port_credit);
+  void *sargs[] = { il2cpp_string(out) };
+  char exc[96] = "";
+  il2cpp_invoke(set_text, item, sargs, exc, sizeof exc);
+  log_printf("[game] About: \"%s\" %s%s", k_port_credit, eol ? "after Mark19's Android line" : "at the end",
+             exc[0] ? exc : "");
+  return 1;
+}
+
 static void title_prompt(void *arg) {
   (void)arg;
   static void *find, *get_text, *set_text, *type;
@@ -240,6 +302,8 @@ static void title_prompt(void *arg) {
     if (!items[i])
       continue;
     void *text = il2cpp_invoke(get_text, items[i], NULL, NULL, 0);
+    if (about_credit(items[i], text, set_text))
+      continue;
     if (u16_starts(text, "Click to Continue")) {
       void *sargs[] = { il2cpp_string("Press any button...") };
       il2cpp_invoke(set_text, items[i], sargs, NULL, 0);

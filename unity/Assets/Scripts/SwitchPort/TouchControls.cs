@@ -17,6 +17,12 @@
 //   reserve     a tap on the HUD's own reserve box drops the item
 //               (<Gamepad>/select), as the touch screen did in NSMB DS
 // Shapes are drawn here (plain circles and rings), labels in the game's font.
+//
+// On the phone they go away while a controller is played with (user,
+// 2026-11-17: "can they be toggled for the apk"): a button or stick on a
+// controller, or a key on a keyboard (not Back), hides them, and a touch on
+// the screen brings them back, menus included. The browser does the same
+// with its keyboard (WatchWebTouch).
 
 using System.Collections.Generic;
 using TMPro;
@@ -34,6 +40,9 @@ public class TouchControls : MonoBehaviour
 
     // the web build: a touch screen in use (PortPlatform.TouchControls)
     public static bool WebTouch { get; private set; }
+
+    // the phone: on, until a controller or keyboard is used (PortPlatform.TouchControls)
+    public static bool PhoneTouch { get; private set; } = true;
 
     static TouchControls s_instance;
     static Sprite s_circle, s_ring;
@@ -64,6 +73,8 @@ public class TouchControls : MonoBehaviour
     {
         if (PortPlatform.Web)
             WatchWebTouch();
+        else if (PortPlatform.Phone)
+            WatchPhoneInput();
         GameManager game = GameManager.Instance;
         bool inMatch = PortPlatform.TouchControls && game && game.localPlayer && game.started && !game.gameover;
         if (!inMatch)
@@ -97,6 +108,57 @@ public class TouchControls : MonoBehaviour
         var keys = UnityEngine.InputSystem.Keyboard.current;
         if (keys != null && keys.anyKey.wasPressedThisFrame)
             WebTouch = false;
+    }
+
+    // the phone: a touch shows them; a controller's button or stick pushed,
+    // or a keyboard's key, hides them
+    static void WatchPhoneInput()
+    {
+        var touch = UnityEngine.InputSystem.Touchscreen.current;
+        if (touch != null && touch.primaryTouch.press.wasPressedThisFrame)
+        {
+            if (!PhoneTouch)
+                Debug.LogWarning("[touch] controls shown: the screen was touched");
+            PhoneTouch = true;
+            return;
+        }
+        if (PhoneTouch && ControllerUsed(out string what))
+        {
+            PhoneTouch = false;
+            Debug.LogWarning("[touch] controls hidden: " + what);
+        }
+    }
+
+    // a control pressed this frame on a real controller or keyboard. The
+    // on-screen controls press a gamepad of their own, made in code (not
+    // native, usage OnScreen), so they never count. A keyboard's Escape is
+    // Android's Back button, which a touch player presses too.
+    static bool ControllerUsed(out string what)
+    {
+        what = null;
+        foreach (UnityEngine.InputSystem.InputDevice device in UnityEngine.InputSystem.InputSystem.devices)
+        {
+            if (!device.native || !device.wasUpdatedThisFrame)
+                continue;
+            var keyboard = device as UnityEngine.InputSystem.Keyboard;
+            if (keyboard == null && !(device is UnityEngine.InputSystem.Gamepad) && !(device is UnityEngine.InputSystem.Joystick))
+                continue;
+            foreach (UnityEngine.InputSystem.InputControl control in device.allControls)
+            {
+                bool used = false;
+                if (control is UnityEngine.InputSystem.Controls.ButtonControl button)
+                    // synthetic: a stick's up/down/left/right, a keyboard's anyKey
+                    used = !button.synthetic && button.wasPressedThisFrame && (keyboard == null || button != keyboard.escapeKey);
+                else if (control is UnityEngine.InputSystem.Controls.StickControl stick)
+                    used = stick.ReadValue().sqrMagnitude > 0.25f;
+                if (used)
+                {
+                    what = device.displayName + " " + control.name;
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     // --- building ---------------------------------------------------------------------------
@@ -164,17 +226,17 @@ public class TouchControls : MonoBehaviour
         // stars left, coins right, the bar between them along the top)
         RectTransform pause = Child(safeRect, "Pause");
         Place(pause, new Vector2(0.5f, 1f), new Vector2(0f, -96f), 76f);
-        Image pauseImage = AddImage(pause, s_circle, 0.3f);
+        AddImage(pause, s_circle, 0.3f); // catches the tap
         Label(pause, "II", 40f, Vector2.zero);
-        var pauseButton = pause.gameObject.AddComponent<Button>();
-        pauseButton.targetGraphic = pauseImage;
-        pauseButton.transition = Selectable.Transition.None;
-        pauseButton.navigation = new Navigation { mode = Navigation.Mode.None };
-        pauseButton.onClick.AddListener(() =>
+        // a tap target, not a Button: a Selectable got picked by the menu
+        // helper as the only item in a match (ControllerMenuSupport's
+        // selection repair), and a controller's A, as Submit, then paused the
+        // game the moment a phone player picked up a controller
+        pause.gameObject.AddComponent<TouchTap>().onTap = () =>
         {
             if (GameManager.Instance && !GameManager.Instance.paused)
                 GameManager.Instance.Pause();
-        });
+        };
         Debug.LogWarning("[touch] on-screen controls made");
     }
 
@@ -422,6 +484,17 @@ public class TouchStick : OnScreenControl, IPointerDownHandler, IDragHandler, IP
         pointer = int.MinValue;
         Value = Vector2.zero;
         base.OnDisable();
+    }
+}
+
+// a finger's tap on it (no selection, no Submit: a controller never presses it)
+public class TouchTap : MonoBehaviour, IPointerClickHandler
+{
+    public System.Action onTap;
+
+    public void OnPointerClick(PointerEventData e)
+    {
+        onTap?.Invoke();
     }
 }
 
