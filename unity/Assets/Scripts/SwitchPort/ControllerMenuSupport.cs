@@ -237,6 +237,26 @@ public class ControllerMenuSupport : MonoBehaviour
             FixNavigation(es);
         }
 
+        // + in a room starts the game, as Start Game (the user, 2026-11-16:
+        // the Local Play room, then the online lobby too; - and ZL+ZR in the
+        // Local Play room open the controller screen: the loader, gamepad.c):
+        // any player with nothing open over the room (the panel in front is
+        // the one with Start Game: not the maps, Settings or a list) and no
+        // palette open; online only the host (Start Game is not interactable
+        // for the others: "not available" in the log)
+        Button startButton = MainMenuManager.Instance ? MainMenuManager.Instance.startGameBtn : null;
+        if (startButton && startButton.gameObject.activeInHierarchy && c.pad != null && c.pad.startButton.wasPressedThisFrame)
+        {
+            bool roomInFront = front && startButton && startButton.transform.IsChildOf(front);
+            GameObject plusOn = es.currentSelectedGameObject;
+            bool typing = plusOn && plusOn.GetComponent<TMPro.TMP_InputField>(); // the lobby's chat box
+            if (roomInFront && !c.inPalette && !InOpenList(plusOn) && !typing)
+                StartFromPlus(c.zone);
+            else
+                Debug.LogWarning("[menu] + from player " + (c.zone + 1) + " ignored: " +
+                                 (!roomInFront ? "a panel is open (" + (front ? front.name : "none") + ")" : typing ? "the chat box is selected" : "a list or palette is open"));
+        }
+
         Gamepad pad = c.pad;
         if (c.zone == 0 && pad != null && TitleShown() && AnyButtonPressed(pad) && !Covered(es, MainMenuManager.Instance.title))
         {
@@ -430,6 +450,35 @@ public class ControllerMenuSupport : MonoBehaviour
     static string LinkName(Selectable s)
     {
         return s ? (s.transform.parent ? NameOf(s.transform.parent) + "/" : "") + NameOf(s.transform) : "-";
+    }
+
+    // --- + in the Local Play room ------------------------------------------------------
+
+    // a dropdown's open list (TMP_Dropdown's "Dropdown List")
+    static bool InOpenList(GameObject selected)
+    {
+        for (Transform t = selected ? selected.transform : null; t; t = t.parent)
+            if (t.name == "Dropdown List")
+                return true;
+        return false;
+    }
+
+    static float s_plusStartedAt = -10f;
+
+    static void StartFromPlus(int zone)
+    {
+        if (Time.unscaledTime - s_plusStartedAt < 1f)
+            return; // two players' + in the same moment: one start
+        MainMenuManager mm = MainMenuManager.Instance;
+        Button start = mm ? mm.startGameBtn : null;
+        if (!start || !start.gameObject.activeInHierarchy || !start.interactable)
+        {
+            Debug.LogWarning("[menu] + from player " + (zone + 1) + ": Start Game is not available");
+            return;
+        }
+        Debug.LogWarning("[menu] + from player " + (zone + 1) + ": Start Game");
+        s_plusStartedAt = Time.unscaledTime;
+        start.onClick.Invoke();
     }
 
     // --- input ------------------------------------------------------------------------

@@ -65,7 +65,8 @@ public class LocalPlay : MonoBehaviour
 
     // --- starting and ending --------------------------------------------------------------
 
-    // Local Play pressed: the console's controller screen for 2 to 4 players;
+    // Local Play pressed: the console's controller screen for 1 to 4 players
+    // (one alone plays full screen, as a one-player online room; user, 2026-11-16);
     // `done` gets how many it confirmed (0: closed with B)
     public static IEnumerator PickPlayers(System.Action<int> done)
     {
@@ -96,9 +97,9 @@ public class LocalPlay : MonoBehaviour
     // L+R in the local room: players joined or left
     static void Joined(int players)
     {
-        if (!Active || !s_inRoom || players < 2 || players == Players)
+        if (!Active || !s_inRoom || players < 1 || players == Players)
             return;
-        Players = Mathf.Clamp(players, 2, MaxPlayers);
+        Players = Mathf.Clamp(players, 1, MaxPlayers); // one is enough (user: practise alone, as online)
         AnnounceGamepads();
         AssignDefaults(); // whoever joined: a character nobody is
         Debug.LogWarning("[local] " + Players + " players now");
@@ -233,12 +234,13 @@ public class LocalPlay : MonoBehaviour
 
     // player 1: MMIM's own choice (the LocalPlayer's properties); players
     // 2-4: their picks in the room. Every Local Play starts as Mario, Luigi,
-    // Toad and Wario in their own colours (user: not the last played; Toad
-    // over Toadette, 2026-11-16);
+    // Wario and Toad, each in the colour of their player number: red, green,
+    // yellow, blue (user: not the last played; Toad over Toadette, Wario
+    // yellow 3 and Toad blue 4, 2026-11-16);
     // picks then hold for the session's matches (back in the room after one).
     // Player 1's online pick (MMIM's saved Settings) is kept aside and put
     // back when local play ends, so Online Play still opens as it was.
-    static readonly string[] k_defaultCharacters = { "Mario", "Luigi", "Toad", "Wario" };
+    static readonly string[] k_defaultCharacters = { "Mario", "Luigi", "Wario", "Toad" };
     static readonly int[] s_character = { -1, -1, -1, -1 }; // -1: not picked yet (the default)
     static readonly int[] s_skin = new int[MaxPlayers];
     static int s_onlineCharacter = -1, s_onlineSkin;

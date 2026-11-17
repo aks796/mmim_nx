@@ -122,24 +122,34 @@ static void local_picked(int n) {
 
 // at the end of a frame on the main thread (java_android_later): the game
 // waits while the applet is up
+// arg non-NULL: Local Play pressed on the main menu (else - / ZL+ZR / L+R
+// in the local room)
 static void local_play_applet(void *arg) {
-  (void)arg;
+  const int pressed_local_play = arg != NULL;
   int n;
-  if (config.controller_applet) {
+  if (config.controller_applet && pressed_local_play && gamepad_handheld_only()) {
+    // handheld with the Joy-Cons attached and nothing else connected (the
+    // user, 2026-11-16: "it should be able to work with the two joycons
+    // attached"): the controller screen's multi-player mode will not take
+    // them (only its one-player mode does), so Local Play starts for one
+    // player at once; - or ZL+ZR in the room still opens the screen for more
+    n = 1;
+    log_printf("[game] Local Play: handheld, Joy-Cons attached, no other controller: 1 player, no controller screen");
+  } else if (config.controller_applet) {
     watchdog_pause(1);
-    n = gamepad_pick_controllers_range(2, s_local_max, NULL, s_colors);
+    n = gamepad_pick_controllers_range(1, s_local_max, NULL, s_colors); // one is enough (practice, as online)
     watchdog_pause(0);
   } else {
     // no controller screen (config): the controllers there are now
     n = gamepad_connected();
-    n = n < 2 ? 2 : n > s_local_max ? s_local_max : n;
+    n = n < 1 ? 1 : n > s_local_max ? s_local_max : n;
     log_printf("[game] Local Play: controller screen off in config, %d player(s) by the controllers there", n);
   }
   local_picked(n);
 }
 
 // LocalPlay.Native(int op, int arg): 1 = announce arg gamepads (1: menus
-// follow player 1), 2 = the controller screen for 2..arg players, 3 = the
+// follow player 1), 2 = the controller screen for 1..arg players, 3 = the
 // local room's screen is up (arg 1) or not (0), 4 = a split match runs (1)
 // or ended (0): prof.c's 10 s windows meanwhile
 static void on_local_play(uint64_t *frame) {
@@ -148,10 +158,11 @@ static void on_local_play(uint64_t *frame) {
     gamepad_set_players(arg);
   } else if (op == 2) {
     s_local_max = arg < 2 ? 2 : arg > 4 ? 4 : arg;
-    log_printf("[game] Local Play: controller screen for 2-%d players", s_local_max);
-    java_android_later(local_play_applet, NULL);
+    log_printf("[game] Local Play: controller screen for 1-%d players", s_local_max);
+    java_android_later(local_play_applet, (void *)1); // Local Play pressed
   } else if (op == 3) {
     s_local_room = arg != 0;
+    gamepad_set_local_room(s_local_room); // - and ZL+ZR open the controller screen there
   } else if (op == 4) {
     prof_match(arg != 0);
   }

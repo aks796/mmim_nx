@@ -17,7 +17,7 @@ GAME		?=	accurate
 ifeq ($(GAME),mmim)
 TARGET		:=	mmim_nx
 APP_TITLE	:=	Mega Item Mod
-APP_VERSION	:=	1.0.0
+APP_VERSION	:=	1.0.1
 else
 TARGET		:=	$(notdir $(CURDIR))
 APP_TITLE	:=	Mario vs. Luigi

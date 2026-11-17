@@ -69,6 +69,7 @@ public class SplitScreen : MonoBehaviour
     readonly Camera[] rigs = new Camera[LocalPlay.MaxPlayers];
     readonly UIUpdater[] huds = new UIUpdater[LocalPlay.MaxPlayers];
     readonly FadeOutManager[] faders = new FadeOutManager[LocalPlay.MaxPlayers];
+    readonly Transform[] partBoxes = new Transform[LocalPlay.MaxPlayers];
     readonly List<ScoreboardUpdater> boards = new List<ScoreboardUpdater>();
     const string ScoreboardName = "Scoreboard";
 
@@ -92,7 +93,7 @@ public class SplitScreen : MonoBehaviour
         return new Rect((slot % 2) * 0.5f, slot < 2 ? 0.5f : 0f, 0.5f, 0.5f);
     }
 
-    static float HudScale(int players)
+    public static float HudScale(int players)
     {
         return players == 2 ? 0.7f : 0.5f;
     }
@@ -103,6 +104,15 @@ public class SplitScreen : MonoBehaviour
         if (s_instance && slot >= 0 && slot < s_instance.rigs.Length && s_instance.rigs[slot])
             return s_instance.rigs[slot];
         return Camera.main;
+    }
+
+    // the box over a player's part on their own HUD copy ("Part (P2)"):
+    // LocalNametags draws the other players' tags in it
+    public static Transform PartBox(int slot)
+    {
+        if (s_instance && slot >= 0 && slot < s_instance.partBoxes.Length)
+            return s_instance.partBoxes[slot];
+        return null;
     }
 
     // a player's death wipe (the Bowser fade), over its own part only; null
@@ -151,6 +161,7 @@ public class SplitScreen : MonoBehaviour
         try
         {
             s_instance.Build(gm);
+            LocalNametags.Make(gm); // P1-P4 over each player in the others' parts
         }
         catch (System.Exception e)
         {
@@ -408,6 +419,7 @@ public class SplitScreen : MonoBehaviour
     {
         HudView box = Box(canvas, "Part (P" + (slot + 1) + ")", ViewOf(slot, players), HudScale(players));
         box.transform.SetSiblingIndex(0);
+        partBoxes[slot] = box.transform;
         foreach (string name in HudParts)
         {
             Transform part = canvas.Find(name);

@@ -46,6 +46,13 @@ int gamepad_take_back_request(void);
 // 1 once after a player held L+R (SL+SR on a single Joy-Con): show the
 // controller applet (game_patch.c, on the main thread)
 int gamepad_take_screen_request(void);
+// the Local Play room is up (game_patch.c): - and ZL+ZR there ask for the
+// controller screen too
+void gamepad_set_local_room(int on);
+// the Joy-Cons attached to the console are the only controller (handheld
+// play, nothing else connected): the controller screen's multi-player mode
+// does not take them
+int gamepad_handheld_only(void);
 // the ring around the button the controller is on, for drawing (egl_shim.c):
 // 1 when it is to be drawn, with its rectangle in window pixels
 int gamepad_ring(float *x0, float *y0, float *x1, float *y1);

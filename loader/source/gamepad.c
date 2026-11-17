@@ -51,6 +51,8 @@ static int s_menu_slot = -1;        // menus: the slot that is player 1 (the fir
 static u32 s_logged_style[MAX_PADS];
 static u64 s_both_since[MAX_PADS];  // L+R held since (ns), for the controller screen
 static volatile int s_screen_request;
+static int s_local_room;               // the Local Play room is up: - or ZL+ZR = the controller screen
+static u64 s_room_prev[MAX_PADS];      // each player's buttons last frame (presses in the room)
 static volatile int s_title_any;    // the title is up: any button is A (game_patch.c)
 static volatile int s_back_request; // player 1 pressed B (game_patch.c: menus go back)
 static u64 s_prev_held0;
@@ -262,6 +264,23 @@ void gamepad_update(const PadInput *pad, int w, int h, int touchscreen_used) {
                       HidNpadButton_StickLDown | HidNpadButton_StickRLeft | HidNpadButton_StickRRight |
                       HidNpadButton_StickRUp | HidNpadButton_StickRDown);
 #ifdef MVL_GAME_MMIM
+    // the Local Play room (the user, 2026-11-16: "minus / ZL + ZR to bring
+    // up the controllers"): a press of - or of ZL and ZR together asks for
+    // the controller screen there, besides L+R held anywhere; + starts the
+    // game (C#: ControllerMenuSupport). Only in that room: in a match - is
+    // the reserve item and ZL/ZR the power-up. The real - (before a full
+    // controller's L becomes - below)
+    {
+      const u64 now = s->held, was = s_room_prev[i];
+      const u64 zz = HidNpadButton_ZL | HidNpadButton_ZR;
+      const int minus = (now & HidNpadButton_Minus) && !(was & HidNpadButton_Minus);
+      const int both = (now & zz) == zz && (was & zz) != zz;
+      if (s_local_room && (minus || both)) {
+        s_screen_request = 1;
+        log_printf("[input] player %d: %s in the Local Play room: controller screen", i + 1, minus ? "-" : "ZL+ZR");
+      }
+      s_room_prev[i] = now;
+    }
     // a full controller (Pro Controller, handheld, a Joy-Con pair): L drops
     // the reserve power-up, as - does (the user, 2026-11-16: "the L (not
     // ZL) should also drop the powerup"); ZL, R and ZR stay the power-up
@@ -361,6 +380,19 @@ void gamepad_title_any(int on) {
 
 int gamepad_players(void) {
   return s_players;
+}
+
+int gamepad_handheld_only(void) {
+  if (!(hidGetNpadStyleSet(HidNpadIdType_Handheld) & HidNpadStyleTag_NpadHandheld))
+    return 0;
+  for (int id = HidNpadIdType_No1; id <= HidNpadIdType_No8; id++)
+    if (hidGetNpadStyleSet((HidNpadIdType)id))
+      return 0;
+  return 1;
+}
+
+void gamepad_set_local_room(int on) {
+  s_local_room = on;
 }
 
 int gamepad_take_screen_request(void) {

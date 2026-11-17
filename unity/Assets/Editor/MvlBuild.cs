@@ -19,6 +19,7 @@ public static class MvlBuild
 {
     const string Output = "Builds/mmim.apk";
     const string PhoneOutput = "Builds/mmim_phone.apk";
+    const int PhoneVersionCode = 2; // the phone APK's release number (v1.0.1)
 
     [MenuItem("MvL/Build Android APK (mvl_nx)")]
     public static void Android()
@@ -119,6 +120,11 @@ public static class MvlBuild
         PlayerSettings.SetGraphicsAPIs(BuildTarget.Android, new[] { GraphicsDeviceType.OpenGLES3 });
         PlayerSettings.SetManagedStrippingLevel(BuildTargetGroup.Android, ManagedStrippingLevel.Low);
         PlayerSettings.Android.minSdkVersion = AndroidSdkVersions.AndroidApiLevel22;
+        // Android's version code: phones install a release over the last one only
+        // when it is not lower (v1.0.0 = 1, v1.0.1 = 2). The version name stays
+        // MMIM's own (bundleVersion "MMIM_1.0.0": the online AppVersion PC MMIM
+        // players match on); the Switch loader reads neither
+        PlayerSettings.Android.bundleVersionCode = PhoneVersionCode;
         PlayerSettings.defaultInterfaceOrientation = UIOrientation.LandscapeLeft;
         // the script's stack with every error and exception in the log (the
         // Switch's debug.log), not just the message

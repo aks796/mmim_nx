@@ -141,10 +141,10 @@ public static class LocalPlayMenu
     {
         s_starting = true;
         mm.ConfirmSound();
-        // who plays: the console's controller screen, 2 to 4 players
+        // who plays: the console's controller screen, 1 to 4 players
         int players = 0;
         yield return LocalPlay.PickPlayers(n => players = n);
-        if (players < 2)
+        if (players < 1)
         {
             s_starting = false; // closed with B: still the main menu, still online
             yield break;
@@ -167,13 +167,11 @@ public static class LocalPlayMenu
         {
             Settings settings = Singleton<Settings>.Instance;
             PhotonNetwork.NickName = settings.nickname;
-            PhotonNetwork.LocalPlayer.SetCustomProperties(new Hashtable
-            {
-                [Enums.NetPlayerProperties.Character] = settings.character,
-                [Enums.NetPlayerProperties.PlayerColor] = settings.skin,
-                [Enums.NetPlayerProperties.Spectator] = false,
-                [Enums.NetPlayerProperties.Ping] = 0,
-            });
+            Hashtable mine = PortSkins.Properties(settings.character); // C (a stand-in) and PortC
+            mine[Enums.NetPlayerProperties.PlayerColor] = settings.skin;
+            mine[Enums.NetPlayerProperties.Spectator] = false;
+            mine[Enums.NetPlayerProperties.Ping] = 0;
+            PhotonNetwork.LocalPlayer.SetCustomProperties(mine);
             Hashtable props = NetworkUtils.DefaultRoomProperties;
             props[Enums.NetRoomProperties.HostName] = settings.nickname;
             PhotonNetwork.CreateRoom("Local Play", new RoomOptions
@@ -344,7 +342,7 @@ public static class LocalPlayMenu
         if (s_boxChooser)
             s_boxChooser.localSlot = 1; // before its Start
         if (s_boxCharacter)
-            s_boxCharacter.onValueChanged.AddListener(index => CharacterPicked(mm, 1, index));
+            s_boxCharacter.onValueChanged.AddListener(option => CharacterPicked(mm, 1, CharacterAt(option)));
 
         // three or four players: a box each, two by two over both
         Rect region = WorldRect(s_p1Box.transform);
@@ -444,7 +442,7 @@ public static class LocalPlayMenu
                     Layout();
                 });
             else
-                card.character.onValueChanged.AddListener(index => CharacterPicked(mm, slot, index));
+                card.character.onValueChanged.AddListener(option => CharacterPicked(mm, slot, CharacterAt(option)));
         }
         return card;
     }
@@ -488,13 +486,13 @@ public static class LocalPlayMenu
     {
         if (!s_box)
             return;
-        int players = Mathf.Clamp(LocalPlay.Players, 2, LocalPlay.MaxPlayers);
+        int players = Mathf.Clamp(LocalPlay.Players, 1, LocalPlay.MaxPlayers);
         bool quarters = players > 2 && s_cards[0] != null;
         if (s_p1Box)
             s_p1Box.SetActive(!quarters);
-        s_box.SetActive(!quarters);
+        s_box.SetActive(!quarters && players > 1); // alone: player 1's box only
         if (s_boxCharacter)
-            s_boxCharacter.SetValueWithoutNotify(LocalPlay.CharacterOf(1));
+            s_boxCharacter.SetValueWithoutNotify(OptionOf(LocalPlay.CharacterOf(1)));
         if (s_boxChooser)
             s_boxChooser.ShowSlot(1);
         if (s_boxOwner && s_boxOwner.colorManager)
@@ -507,7 +505,7 @@ public static class LocalPlayMenu
             card.box.SetActive(quarters && slot < players);
             FitCaption(card.character);
             if (card.character)
-                card.character.SetValueWithoutNotify(LocalPlay.CharacterOf(slot));
+                card.character.SetValueWithoutNotify(OptionOf(LocalPlay.CharacterOf(slot)));
             if (card.chooser)
                 card.chooser.ShowSlot(slot);
         }
@@ -728,12 +726,53 @@ public static class LocalPlayMenu
     // characters also has MiiBumm (a model, voices, icons; kept out of the
     // menu) and Waluigi (the same, left out of the list: added at the end,
     // GlobalController.prefab), so the five keep their numbers online, where
-    // other players' MMIM knows six. In local play every character is on
-    // offer (each one's name and its "ready" picture, as MMIM's entries);
-    // online the menu is MMIM's again, and player 1 on one of the two is
-    // Mario there (another player's game has no Waluigi).
+    // other players' MMIM knows six. Every character is on offer, local and
+    // online (each one's name and its "ready" picture, as MMIM's entries):
+    // online, Waluigi and MiiBumm are tied to stand-ins PC MMIM knows,
+    // Luigi and Mario, and other port players see them as they are
+    // (PortSkins).
 
     static System.Collections.Generic.List<TMP_Dropdown.OptionData> s_onlineOptions;
+
+    // The menus' order: MMIM's five, Waluigi, then MiiBumm, the mod's own
+    // character, last as the guest of honour (user, 2026-11-16). Only the
+    // menus change: each character keeps its number (MiiBumm's 5 is PC
+    // MMIM's too), so an entry's position and its character differ for the
+    // last two. CharacterAt: menu entry -> character; OptionOf: back.
+    static int[] s_order;
+
+    static int[] Order()
+    {
+        PlayerData[] chars = GlobalController.Instance ? GlobalController.Instance.characters : null;
+        int n = chars != null ? chars.Length : 0;
+        if (s_order != null && s_order.Length == n)
+            return s_order;
+        var order = new System.Collections.Generic.List<int>();
+        int miibumm = -1;
+        for (int i = 0; i < n; i++)
+        {
+            if (chars[i] && chars[i].name == "MiiBumm")
+                miibumm = i;
+            else
+                order.Add(i);
+        }
+        if (miibumm >= 0)
+            order.Add(miibumm);
+        s_order = order.ToArray();
+        return s_order;
+    }
+
+    public static int CharacterAt(int option)
+    {
+        int[] order = Order();
+        return option >= 0 && option < order.Length ? order[option] : option;
+    }
+
+    public static int OptionOf(int character)
+    {
+        int at = System.Array.IndexOf(Order(), character);
+        return at >= 0 ? at : character;
+    }
 
     static void CharacterOptions(MainMenuManager mm, bool local)
     {
@@ -745,10 +784,14 @@ public static class LocalPlayMenu
             s_onlineOptions = new System.Collections.Generic.List<TMP_Dropdown.OptionData>(menu.options);
         int online = s_onlineOptions.Count;
         var options = new System.Collections.Generic.List<TMP_Dropdown.OptionData>(s_onlineOptions);
-        if (local)
-            for (int i = online; i < chars.Length; i++)
-                if (chars[i])
-                    options.Add(new TMP_Dropdown.OptionData(chars[i].name, chars[i].readySprite));
+        // every character, online too: Waluigi and MiiBumm go online behind
+        // their stand-ins (PortSkins), so PC MMIM sees Luigi and Mario
+        for (int at = online; at < chars.Length; at++)
+        {
+            int i = CharacterAt(at);
+            options.Add(chars[i] ? new TMP_Dropdown.OptionData(chars[i].name, chars[i].readySprite)
+                                 : new TMP_Dropdown.OptionData("?"));
+        }
         if (menu.options.Count != options.Count)
         {
             menu.ClearOptions();
@@ -760,14 +803,7 @@ public static class LocalPlayMenu
                 other.ClearOptions();
                 other.AddOptions(options);
             }
-        int mine = Utils.GetCharacterIndex();
-        if (!local && mine >= online)
-        {
-            // online: an offered character (the menu's, Mario)
-            Debug.LogWarning("[local] player 1 was " + chars[mine].name + " (local play only): Mario online");
-            menu.value = 0; // MMIM's SwapCharacter: the property, the saved choice, the palette
-        }
-        menu.SetValueWithoutNotify(Utils.GetCharacterIndex());
+        menu.SetValueWithoutNotify(OptionOf(Utils.GetCharacterIndex()));
         menu.RefreshShownValue();
     }
 

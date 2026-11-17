@@ -39,7 +39,7 @@ rsync -a --exclude='.DS_Store' "$P/WebGLTemplates/MMIM" "$P/WebGLTemplates/MMIM.
       "$OUT/unity/Assets/WebGLTemplates/"
 
 mkdir -p "$OUT/tools"
-for f in scrub_apk_paths.py sign_apk.sh make_nro_icon.py level_bg.py export_github_repo.sh; do
+for f in scrub_apk_paths.py scrub_web_data.py sign_apk.sh make_nro_icon.py level_bg.py export_github_repo.sh; do
   cp -p "$ROOT/tools/$f" "$OUT/tools/"
 done
 
