@@ -18,12 +18,14 @@ ifeq ($(GAME),mmim)
 TARGET		:=	mmim_nx
 APP_TITLE	:=	Mega Item Mod
 APP_VERSION	:=	1.0.2
+# the port, then the game's makers (MiiBumm's mod of ipodtouch0218's game)
+APP_AUTHOR	:=	aks796, MiiBumm / ipodtouch0218
 else
 TARGET		:=	mvl_nx
 APP_TITLE	:=	Mario vs. Luigi
 APP_VERSION	:=	1.0.0
-endif
 APP_AUTHOR	:=	aks796
+endif
 BUILD		:=	build
 SOURCES		:=	source
 DATA		:=	data
