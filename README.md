@@ -38,7 +38,8 @@ and Mario.
 <sub>MiiBumm (P1) and Waluigi (P2) in Local Play.</sub>
 </p>
 
-Downloads are on the [Releases](../../releases) page.
+Downloads are on the [Releases](../../releases) page. The Android and browser versions are also on
+[itch.io](https://aks796.itch.io/mmim-mobile).
 
 ## Nintendo Switch
 
@@ -76,7 +77,7 @@ It needs a 64-bit phone (arm64) with Android 5.1 or newer.
 
 ## Web
 
-Open the game's itch.io page, or host the files of `MMIM_Web_v1.0.2.zip` on any web server. It plays in a current
+Open the game's [itch.io page](https://aks796.itch.io/mmim-mobile), or host the files of `MMIM_Web_v1.0.2.zip` on any web server. It plays in a current
 desktop or phone browser. On an Android phone, the first touch switches the game to full screen and landscape.
 
 Keep the game's tab in front during an online match: browsers pause background tabs, and the game drops from the room
