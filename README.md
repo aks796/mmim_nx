@@ -136,6 +136,7 @@ Put `mmim_nx.nro` and the game's APK (`mmim.apk`) in `/switch/mmim_nx/` on the S
 
 - **MiiBumm**: MiiBumm's Mega Item Mod.
 - **ipodtouch0218**: NSMB Mario vs. Luigi, the game MMIM is built on.
+- **HDErick**: [MvL Accurate](https://github.com/HDErick/NSMB-MarioVsLuigi-Accurate), whose 2-player split screen inspired Local Play's layout.
 - **Andy Nguyen (TheFloW) and fgsfds**: the so-loader the Switch loader started from.
 - **gm666q**: the pthread layer from lswtcs-vita.
 - **StevensND**: the SaltyNX template from nfsmw-nx.
