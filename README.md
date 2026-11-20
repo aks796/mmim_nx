@@ -9,7 +9,7 @@
 [![Switch](https://img.shields.io/badge/Nintendo_Switch-Homebrew-E60012?style=for-the-badge&logo=nintendoswitch&logoColor=white)](#nintendo-switch)
 [![Android](https://img.shields.io/badge/Android-APK-3DDC84?style=for-the-badge&logo=android&logoColor=white)](#android)
 [![Web](https://img.shields.io/badge/Web-Browser-E34F26?style=for-the-badge&logo=html5&logoColor=white)](#web)
-[![Version](https://img.shields.io/badge/Version-1.0.2-4C8BF5?style=for-the-badge)](../../releases/latest)
+[![Version](https://img.shields.io/badge/Version-1.0.3-4C8BF5?style=for-the-badge)](../../releases/latest)
 
 <img src="docs/split_screen.jpg" alt="Four players in split screen on the Nintendo Switch" width="49%">
 <img src="docs/touch_controls.jpg" alt="Fire Mario jumping with the touch controls on a phone" width="49%">
@@ -30,8 +30,9 @@ of ipodtouch0218's [NSMB Mario vs. Luigi](https://github.com/ipodtouch0218/NSMB-
 - **Web browsers**: playable on a computer or a phone.
 
 Online rooms are the same as PC MMIM v1.0.0.0, so Switch, phone, browser and PC players all play together.
-Waluigi and MiiBumm can be picked online too: players on this port see them, and PC MMIM players see them as Luigi
-and Mario.
+On the Switch, Waluigi and MiiBumm can be picked online too: other Switch players see them, and everyone else
+(PC MMIM, phones, browsers) sees them as Luigi and Mario. The Android and browser versions offer MMIM's own
+characters only.
 
 <p align="center">
 <img src="docs/waluigi_miibumm.jpg" alt="MiiBumm and Waluigi in Super Leaf suits, playing in split screen on the Switch" width="70%"><br>
@@ -45,7 +46,7 @@ Downloads are on the [Releases](../../releases) page. The Android and browser ve
 
 Needs a Switch running [Atmosphère](https://github.com/Atmosphere-NX/Atmosphere).
 
-1. Extract `MMIM_Switch_v1.0.2.zip` to the root of the SD card. This gives `/switch/mmim_nx/mmim_nx.nro` and
+1. Extract `MMIM_Switch_v1.0.3.zip` to the root of the SD card. This gives `/switch/mmim_nx/mmim_nx.nro` and
    `/switch/mmim_nx/mmim.apk`.
 2. Start the Homebrew Menu by **holding R while launching any installed game**. The port needs the console's full
    memory; from the album applet it stops with "Not enough memory".
@@ -72,12 +73,12 @@ Settings live in `/switch/mmim_nx/config.txt` after the first start.
 
 ## Android
 
-Install `MMIM_Android_v1.0.2.apk` (it updates older versions in place). Your phone may ask you to allow installs from your browser or file manager first.
+Install `MMIM_Android_v1.0.3.apk` (it updates older versions in place). Your phone may ask you to allow installs from your browser or file manager first.
 It needs a 64-bit phone (arm64) with Android 5.1 or newer.
 
 ## Web
 
-Open the game's [itch.io page](https://aks796.itch.io/mmim-mobile), or host the files of `MMIM_Web_v1.0.2.zip` on any web server. It plays in a current
+Open the game's [itch.io page](https://aks796.itch.io/mmim-mobile), or host the files of `MMIM_Web_v1.0.3.zip` on any web server. It plays in a current
 desktop or phone browser. On an Android phone, the first touch switches the game to full screen and landscape.
 
 Keep the game's tab in front during an online match: browsers pause background tabs, and the game drops from the room
@@ -104,8 +105,8 @@ This repository holds the port's own code. MMIM's game code and assets are MiiBu
 |---|---|
 | `loader/` | `mmim_nx`, the Switch homebrew loader that runs the game's Android build (arm64) on the Switch. It draws with deko3d through `source/dkgl`, a GLES subset. |
 | `loader/deps/` | Sources of the two renderer libraries, deko3d and uam, with the port's patches, plus `build_deps.sh`. |
-| `unity/` | The port's Unity scripts (`Assets/Scripts/SwitchPort`), its build menu (`Assets/Editor/MvlBuild.cs`) and the web page template. |
-| `tools/` | Release helpers: `scrub_apk_paths.py`, `scrub_web_data.py`, `sign_apk.sh`, the NRO icon maker and this repository's export script. |
+| `unity/` | The port's Unity scripts (`Assets/Scripts/SwitchPort`), its build menu (`Assets/Editor/MvlBuild.cs`), the Android audio step (`Assets/Editor/MvlAudio.cs`) and the web page template. |
+| `tools/` | Release helpers: `scrub_apk_paths.py`, `scrub_web_data.py`, `sign_apk.sh`, the NRO icon maker and this repository's export script. `match_pc_import.py` and `clip_kbps.py` compare the project's import settings and sound bitrates with MMIM's own build; `audio/android_quality.tsv` is the Android sound quality per clip that `MvlAudio.cs` applies (`-executeMethod MvlAudio.AndroidBuild` or `MvlAudio.PhoneBuild`). |
 
 `unity/Assets/Scripts/SwitchPort/WebBuildOptions.cs` also needs Unity's own `Il2CppSetOptionAttribute.cs`, which
 comes with the Unity editor (`Editor/Data/il2cpp/` on Windows, `Unity.app/Contents/il2cpp/` on macOS) and is not

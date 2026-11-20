@@ -17,7 +17,7 @@ GAME		?=	accurate
 ifeq ($(GAME),mmim)
 TARGET		:=	mmim_nx
 APP_TITLE	:=	Mega Item Mod
-APP_VERSION	:=	1.0.2
+APP_VERSION	:=	1.0.3
 # the port, then the game's makers (MiiBumm's mod of ipodtouch0218's game)
 APP_AUTHOR	:=	aks796, MiiBumm / ipodtouch0218
 else

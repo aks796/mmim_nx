@@ -29,6 +29,12 @@ public static class PortSkins
 {
     public const string Key = "PortC";
 
+    // Waluigi and MiiBumm are the Switch build's only (user, 2026-11-18:
+    // MiiBumm does not want them in the phone and browser builds). Those
+    // play like PC MMIM: neither is on offer, a saved pick of either goes
+    // online as its stand-in, and a Switch player's shows as the stand-in.
+    public static bool PortCharacters => PortPlatform.Switch;
+
     static readonly string[,] k_standIns = { { "Waluigi", "Luigi" }, { "MiiBumm", "Mario" } };
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
@@ -71,6 +77,8 @@ public static class PortSkins
     // stand-in, PortC the real one (null removes it when there is none)
     public static Hashtable Properties(int character)
     {
+        if (!PortCharacters)
+            character = StandIn(character);
         int standIn = StandIn(character);
         return new Hashtable
         {
@@ -83,6 +91,8 @@ public static class PortSkins
     // is a character whose stand-in is the C they report, else C
     public static int Resolve(Player player, int reported)
     {
+        if (!PortCharacters)
+            return reported;
         if (player == null || player.CustomProperties == null || !player.CustomProperties.ContainsKey(Key))
             return reported;
         if (!(player.CustomProperties[Key] is int real))

@@ -185,10 +185,29 @@ def layer_pixels(L):
                 if sx1 > sx0 and sy1 > sy0 and dx1 > dx0 and dy1 > dy0:
                     out.paste(im.crop((sx0, sy0, sx1, sy1)).resize((dx1 - dx0, dy1 - dy0), Image.NEAREST), (dx0, dy0))
         return out
-    out = Image.new("RGBA", (tw, th), (0, 0, 0, 0))  # tiled, from the bottom-left
-    for x in range(0, tw, w):
-        for y in range(th - h, -h, -h):
-            out.paste(im, (x, y))
+    # tiled, as Unity tiles a sprite with borders: corners once, the edges
+    # repeated along their length, the centre repeated both ways, each from
+    # its bottom-left (without borders: the whole sprite, from the bottom-left).
+    # Night Light's hills (border top 163 of 185) are their snowy caps once at
+    # the top and the plain bottom strip repeated under them down to the
+    # ground; tiling the whole sprite drew a capless copy floating in the sky.
+    bl, bb, br, bt = (round(v) for v in L["border"])
+    out = Image.new("RGBA", (tw, th), (0, 0, 0, 0))
+    cols = [(0, bl, 0, bl, False), (bl, w - br, bl, tw - br, True), (w - br, w, tw - br, tw, False)]
+    rows = [(0, bt, 0, bt, False), (bt, h - bb, bt, th - bb, True), (h - bb, h, th - bb, th, False)]
+    for sx0, sx1, dx0, dx1, tile_x in cols:
+        for sy0, sy1, dy0, dy1, tile_y in rows:
+            if sx1 <= sx0 or sy1 <= sy0 or dx1 <= dx0 or dy1 <= dy0:
+                continue
+            part = im.crop((sx0, sy0, sx1, sy1))
+            pw, ph = part.size
+            region = Image.new("RGBA", (dx1 - dx0, dy1 - dy0), (0, 0, 0, 0))
+            xs = range(0, dx1 - dx0, pw) if tile_x else [0]
+            ys = range(dy1 - dy0 - ph, -ph, -ph) if tile_y else [0]
+            for x in xs:
+                for y in ys:
+                    region.paste(part, (x, y))
+            out.paste(region, (dx0, dy0))
     return out
 
 

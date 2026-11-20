@@ -785,8 +785,10 @@ public static class LocalPlayMenu
         int online = s_onlineOptions.Count;
         var options = new System.Collections.Generic.List<TMP_Dropdown.OptionData>(s_onlineOptions);
         // every character, online too: Waluigi and MiiBumm go online behind
-        // their stand-ins (PortSkins), so PC MMIM sees Luigi and Mario
-        for (int at = online; at < chars.Length; at++)
+        // their stand-ins (PortSkins), so PC MMIM sees Luigi and Mario. The
+        // phone and browser builds keep MMIM's own list (PortSkins.PortCharacters)
+        int last = PortSkins.PortCharacters ? chars.Length : online;
+        for (int at = online; at < last; at++)
         {
             int i = CharacterAt(at);
             options.Add(chars[i] ? new TMP_Dropdown.OptionData(chars[i].name, chars[i].readySprite)

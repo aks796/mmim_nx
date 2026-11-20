@@ -8,9 +8,11 @@
 #            tools/, deps/ (renderer library sources, no build output)
 #   unity/   the port's own Unity files: Assets/Scripts/SwitchPort (minus
 #            Unity's own Il2CppSetOptionAttribute.cs), Assets/Editor/
-#            MvlBuild.cs, Assets/WebGLTemplates/MMIM. MMIM's own scripts
+#            MvlBuild.cs + MvlAudio.cs, Assets/WebGLTemplates/MMIM. MMIM's own scripts
 #            and assets are MiiBumm's and never go in.
-#   tools/   the release helpers (scrub, sign, icon, this script)
+#   tools/   the release helpers (scrub, sign, icon, this script), the
+#            import matchers (match_pc_import.py, clip_kbps.py) and
+#            audio/android_quality.tsv
 #   + tools/github/: README.md, THIRD_PARTY_NOTICES.md, LICENSE (GPL-3.0),
 #     LICENSE-MIT, gitignore (as .gitignore), docs/ (the README's screenshots)
 # Ends with a scan: no home path, user name or e-mail address anywhere.
@@ -34,14 +36,19 @@ mkdir -p "$OUT/unity/Assets/Scripts" "$OUT/unity/Assets/Editor" "$OUT/unity/Asse
 rsync -a --exclude='.DS_Store' --exclude='Il2CppSetOptionAttribute.cs*' \
       "$P/Scripts/SwitchPort" "$OUT/unity/Assets/Scripts/"
 cp -p "$P/Scripts/SwitchPort.meta" "$OUT/unity/Assets/Scripts/"
-cp -p "$P/Editor/MvlBuild.cs" "$P/Editor/MvlBuild.cs.meta" "$OUT/unity/Assets/Editor/"
+cp -p "$P/Editor/MvlBuild.cs" "$P/Editor/MvlBuild.cs.meta" "$P/Editor/MvlAudio.cs" "$P/Editor/MvlAudio.cs.meta" \
+      "$OUT/unity/Assets/Editor/"
 rsync -a --exclude='.DS_Store' "$P/WebGLTemplates/MMIM" "$P/WebGLTemplates/MMIM.meta" \
       "$OUT/unity/Assets/WebGLTemplates/"
 
 mkdir -p "$OUT/tools"
-for f in scrub_apk_paths.py scrub_web_data.py sign_apk.sh make_nro_icon.py level_bg.py export_github_repo.sh; do
+for f in scrub_apk_paths.py scrub_web_data.py sign_apk.sh make_nro_icon.py level_bg.py export_github_repo.sh \
+         match_pc_import.py clip_kbps.py; do
   cp -p "$ROOT/tools/$f" "$OUT/tools/"
 done
+# the Android audio quality per clip (MvlAudio.cs reads ../tools/audio/)
+mkdir -p "$OUT/tools/audio"
+cp -p "$ROOT/tools/audio/android_quality.tsv" "$OUT/tools/audio/"
 
 G="$ROOT/tools/github"
 cp -p "$G/README.md" "$G/THIRD_PARTY_NOTICES.md" "$G/LICENSE" "$G/LICENSE-MIT" "$OUT/"

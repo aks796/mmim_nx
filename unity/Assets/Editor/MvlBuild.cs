@@ -19,7 +19,7 @@ public static class MvlBuild
 {
     const string Output = "Builds/mmim.apk";
     const string PhoneOutput = "Builds/mmim_phone.apk";
-    const int PhoneVersionCode = 3; // the phone APK's release number (3: touch controls hide with a controller)
+    const int PhoneVersionCode = 4; // the phone APK's release number (3: touch controls hide with a controller; 4: MMIM's own characters only)
 
     [MenuItem("MvL/Build Android APK (mvl_nx)")]
     public static void Android()
